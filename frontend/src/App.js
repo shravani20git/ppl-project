@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import Login from "./login.jsx";
+import Login from "./Login.jsx";
 import {
   BrowserRouter as Router,
   Route,
