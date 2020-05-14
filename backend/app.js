@@ -24,30 +24,20 @@ mongoose
   .catch((err) => {
     console.error("Database connection error " + err);
   });
-
-function addPatient(data) {
-  var patient = new Patient(data);
-  patient
-    .save()
-    .then((doc) => {
-      console.log(doc);
-      return true;
-    })
-    .catch((err) => {
-      console.log(err);
-      return false;
-    });
-}
-
+//patient login-check on every refresh
 app.get("/patient/login-status", (req, res) => {
   console.log(req.sessionID);
   if (req.session.user_id) {
-    res.json({ status: true, user_id: req.session.user_id });
+    res.json({
+      status: true,
+      user_id: req.session.user_id,
+      user_type: "patient",
+    });
   } else {
-    res.json({ status: false, user_id: undefined });
+    res.json({ status: false, user_id: undefined, user_type: undefined });
   }
 });
-
+//patient login
 app.post("/patient/login", (req, res) => {
   var data = req.body;
   console.log(data);
@@ -64,26 +54,41 @@ app.post("/patient/login", (req, res) => {
           status: true,
           msg: "successful",
           user_id: req.session.user_id,
+          user_type: "patient",
         });
       }
     }
   );
 });
-app.post("/patient/signup", (req, res) => {
-  var data = req.body;
-  console.log(data);
-  if (addPatient(data)) {
-    res.json({ status: true });
-  } else {
-    res.json({ status: false });
-  }
-});
-
+//patient logout
 app.get("/patient/logout", (req, res) => {
   req.session.destroy((err) => {
     if (!err) {
       res.json({ status: true });
     }
+  });
+});
+//patient sign-up ## working of async await:- https://medium.com/javascript-in-plain-english/async-await-javascript-5038668ec6eb
+async function addPatient(data) {
+  var patient = new Patient(data);
+  var x = false;
+  await patient
+    .save()
+    .then((doc) => {
+      console.log(doc);
+      x = true;
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+  return x;
+}
+app.post("/patient/signup", (req, res) => {
+  var data = req.body;
+  console.log(data);
+  addPatient(data).then((val) => {
+    console.log(val);
+    res.json({ status: val });
   });
 });
 

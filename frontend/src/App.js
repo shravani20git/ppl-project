@@ -20,19 +20,32 @@ function App() {
     } else {
       url = "http://localhost:5000/doctors/login-status";
     }
-    fetch(url, {
-      method: "GET", // *GET, POST, PUT, DELETE, etc.
-      credentials: "include", // to send cookies and other things over cross origin requests
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Success:", data);
+    async function checkLogin() {
+      let data;
+      await fetch(url, {
+        method: "GET", // *GET, POST, PUT, DELETE, etc.
+        credentials: "include", // to send cookies and other things over cross origin requests
+      })
+        .then((response) => response.json())
+        .then((d) => {
+          console.log("Success:", data);
+          data = d;
+        })
+        .catch((error) => {
+          data = null;
+          console.error("Error:", error);
+        });
+      return data;
+    }
+    checkLogin().then((data) => {
+      if (data) {
         setLoggedIn(data.status);
         setUid(data.user_id);
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
+        setLogInType(data.user_type);
+      } else {
+        console.log("Error aaya");
+      }
+    });
   }, []);
   const handleLogin = (data) => {
     let url;
@@ -41,25 +54,36 @@ function App() {
     } else {
       url = "http://localhost:5000/doctors/login";
     }
-    fetch(url, {
-      method: "POST", // *GET, POST, PUT, DELETE, etc.
-      credentials: "include", // to send cookies and other things over cross origin requests
-      headers: {
-        "Content-Type": "application/json",
+    async function login(data) {
+      let res;
+      await fetch(url, {
+        method: "POST", // *GET, POST, PUT, DELETE, etc.
+        credentials: "include", // to send cookies and other things over cross origin requests
+        headers: {
+          "Content-Type": "application/json",
 
-        // 'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: JSON.stringify(data), // body data type must match "Content-Type" header
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Success:", data);
+          // 'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: JSON.stringify(data), // body data type must match "Content-Type" header
+      })
+        .then((response) => response.json())
+        .then((d) => {
+          console.log("Success:", data);
+          res = d;
+        })
+        .catch((error) => {
+          res = null;
+          console.error("Error:", error);
+        });
+      return res;
+    }
+    login(data).then((data) => {
+      if (data) {
         setLoggedIn(data.status);
         setUid(data.user_id);
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
+        setLogInType(data.user_type);
+      }
+    });
   };
   const handleLogout = () => {
     let url;
