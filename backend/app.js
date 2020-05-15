@@ -2,7 +2,7 @@ var express = require("express");
 var cors = require("cors");
 var session = require("express-session");
 var mongoose = require("mongoose");
-var Patient = require("./models").Patient;
+var { Patient, Doctor } = require("./models");
 app = express();
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json()); // for parsing application/json
@@ -24,6 +24,8 @@ mongoose
   .catch((err) => {
     console.error("Database connection error " + err);
   });
+
+//### PATIENT ###
 //patient login-check on every refresh
 app.get("/patient/login-status", (req, res) => {
   console.log(req.sessionID);
@@ -87,6 +89,72 @@ app.post("/patient/signup", (req, res) => {
   var data = req.body;
   console.log(data);
   addPatient(data).then((val) => {
+    console.log(val);
+    res.json({ status: val });
+  });
+});
+
+// ### DOCTOR ###
+//Doctor login-check on every refresh
+app.get("/doctor/login-status", (req, res) => {
+  console.log(req.sessionID);
+  if (req.session.user_id) {
+    res.json({
+      status: true,
+      user_id: req.session.user_id,
+      user_type: "doctor",
+    });
+  } else {
+    res.json({ status: false, user_id: undefined, user_type: undefined });
+  }
+});
+//Doctor login
+app.post("/doctor/login", (req, res) => {
+  var data = req.body;
+  console.log(data);
+  Doctor.findOne({ email: data.email, password: data.password }, (err, doc) => {
+    if (err || doc === null) {
+      console.log(err);
+      res.json({ status: false, msg: "unsuccessful", user_id: undefined });
+    } else {
+      console.log(req.sessionID);
+      req.session.user_id = doc._id;
+      res.json({
+        status: true,
+        msg: "successful",
+        user_id: req.session.user_id,
+        user_type: "doctor",
+      });
+    }
+  });
+});
+//Doctor logout
+app.get("/doctor/logout", (req, res) => {
+  req.session.destroy((err) => {
+    if (!err) {
+      res.json({ status: true });
+    }
+  });
+});
+// Doctor Sign up
+async function addDoctor(data) {
+  var doctor = new Doctor(data);
+  var x = false;
+  await doctor
+    .save()
+    .then((doc) => {
+      console.log(doc);
+      x = true;
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+  return x;
+}
+app.post("/doctor/signup", (req, res) => {
+  var data = req.body;
+  console.log(data);
+  addDoctor(data).then((val) => {
     console.log(val);
     res.json({ status: val });
   });
